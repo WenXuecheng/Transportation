@@ -1,0 +1,53 @@
+server:
+  #服务器上传文件需要更换ip
+  ip: 35.228.23.154
+#  ip: localhost
+  port: 9090
+#  ssl:
+#    key-alias: tomcat
+#    key-store-password: o4w93t7n
+#    key-store-type: PKCS12
+#    key-store: classpath:www.aurexp.com.pfx
+
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://free1.mysql.database.azure.com/rucn?characterEncoding=utf8&useSSL=true&requireSSL=true
+    username: root_azure
+    password: Qq5515150
+#    username: root
+#    password: ChatP@ss7633
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  mail:
+    email: jarvis_server@163.com
+    host: smtp.163.com
+    port: 465
+    username: jarvis_server
+    password: GIEGXBMCMFCHLCPK
+    sender: Aurexp
+  redis:
+#    host: 35.228.23.154
+    port: 6379
+    host: localhost
+
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml  #????mybatis?xml??
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+files:
+  upload:
+#    path: D:\pro\Transportation\src\main\resources\files\
+#    cache: D:\pro\Transportation\src\main\resources\cache\
+    path: /home/wenxuecheng0708/server/springboot/files/
+    cache: /home/wenxuecheng0708/server/springboot/cache/
+
+
+code:
+  expiration: 300

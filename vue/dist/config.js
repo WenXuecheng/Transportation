@@ -1,0 +1,5 @@
+export const serverIp = '35.228.23.154'
+// export const serverIp = 'localhost'
+export const serverPort = '9090'
+export const http = 'http'
+//export const http = 'https'
