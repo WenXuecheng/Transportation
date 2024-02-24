@@ -1,6 +1,8 @@
 server:
   #服务器上传文件需要更换ip
-  ip: 35.228.23.154
+  #生产
+  ip: 34.88.124.218
+#  #测试
 #  ip: localhost
   port: 9090
 #  ssl:
@@ -12,12 +14,17 @@ server:
 
 spring:
   datasource:
+#    #测试
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/rucn?characterEncoding=utf8
+#    username: root
+#    password: 123456
+    #生产
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://free1.mysql.database.azure.com/rucn?characterEncoding=utf8&useSSL=true&requireSSL=true
     username: root_azure
     password: Qq5515150
-#    username: root
-#    password: ChatP@ss7633
+
   servlet:
     multipart:
       max-file-size: 100MB
@@ -30,10 +37,10 @@ spring:
     password: GIEGXBMCMFCHLCPK
     sender: Aurexp
   redis:
-#    host: 35.228.23.154
+    host: 34.88.124.218
     port: 6379
-    host: localhost
-
+    password: EGXBMCMFCHL
+#    host: localhost
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml  #????mybatis?xml??
@@ -43,8 +50,10 @@ mybatis:
 
 files:
   upload:
+#    #测试
 #    path: D:\pro\Transportation\src\main\resources\files\
 #    cache: D:\pro\Transportation\src\main\resources\cache\
+    #生产
     path: /home/wenxuecheng0708/server/springboot/files/
     cache: /home/wenxuecheng0708/server/springboot/cache/
 

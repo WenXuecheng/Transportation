@@ -32,4 +32,6 @@ public interface IUserService extends IService<User> {
     boolean emialVerification(String email);
 
     Boolean saveByUser(UserDTO userDTO);
+
+    Boolean sendPassword(String email);
 }

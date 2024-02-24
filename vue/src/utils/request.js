@@ -1,6 +1,8 @@
 import axios from 'axios'
 import {serverIp,serverPort,http} from "../../public/config";
 import {Message} from "element-ui";
+import store from "../store/store";
+import router, {resetRouter} from "@/router";
 const request = axios.create({
     baseURL: `${http}://${serverIp}:${serverPort}`,
     timeout: 30000
@@ -35,28 +37,10 @@ request.interceptors.response.use(
         }
         // 当权限验证不通过的时候给出提示
         if (res.code === '401') {
-            if (res.msg === "无token，请重新登录"){
-                Message({
-                    message: "Нет токена, пожалуйста, войдите снова",
-                    type: 'error'
-                })
-                //store.logout()
-            }
-            if (res.msg === "token验证失败，请重新登录"){
-                Message({
-                    message: "Верификация не прошла, пожалуйста, войдите снова",
-                    type: 'error'
-                })
-                //store.logout()
-            }
-            if (res.msg === "用户不存在，请重新登录"){
-                Message({
-                    message: "Пользователь не существует, пожалуйста, войдите снова",
-                    type: 'error'
-                })
-                //store.logout()
-            }
-
+            Message({
+                message: "Не удалось проверить проверку заказа, пожалуйста, войдите снова",
+                type: 'error'
+            })
         }
         return res;
     },

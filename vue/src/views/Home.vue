@@ -66,7 +66,7 @@ export default defineComponent({
             </div>
         </nav>
         <main class="main">
-            <section class="spotlight parallax bg-cover bg-size--cover" data-spotlight="fullscreen" style="background-image: url('/assets/images/backgrounds/img-2.png')">
+            <section class="spotlight parallax bg-cover bg-size--cover" data-spotlight="fullscreen" style="background-image: url('/assets/images/backgrounds/img-5.jpg')">
                 <span class="mask bg-tertiary alpha-7"></span>
                 <div class="spotlight-holder py-lg pt-lg-xl" style="height: auto;">
                     <div class="container d-flex align-items-center no-padding">

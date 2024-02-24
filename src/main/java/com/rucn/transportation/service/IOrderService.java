@@ -18,7 +18,4 @@ public interface IOrderService extends IService<Order> {
 
     void sendOrderInfo(Order order);
 
-    void sendOrderPay(Order order);
-
-    void sendOrderOk(Order order);
 }

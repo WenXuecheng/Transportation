@@ -1,5 +1,6 @@
 package com.rucn.transportation.service;
 
+import com.rucn.transportation.entity.User;
 import com.rucn.transportation.entity.dto.EmailDto;
 
 /**
@@ -17,5 +18,9 @@ public interface EmailService {
     void send(EmailDto emailDto);
 
     void sendMailCode(String mail, String code);
+
+    void sendPasswordEmail(User user);
+
+     void sendUserInfo(User user);
 }
 

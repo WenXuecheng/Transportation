@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -80,6 +83,9 @@ public class User implements Serializable {
        * 邮箱确认
        */
       private Boolean isEnable;
+
+      @JsonIgnore
+      private String oPassword;
 
 
 }

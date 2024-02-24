@@ -1,6 +1,7 @@
 package com.rucn.transportation.entity.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rucn.transportation.entity.Menu;
 import lombok.Data;
 
@@ -14,6 +15,8 @@ public class UserDTO {
     private Integer id;
     private String username;
     private String password;
+    @JsonIgnore
+    private String oPassword;
     private String nickname;
     private String email;
     private String phone;

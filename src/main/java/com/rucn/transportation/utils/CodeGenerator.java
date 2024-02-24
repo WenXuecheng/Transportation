@@ -12,7 +12,7 @@ public class CodeGenerator {
     }
 
     private static void generate() {
-        FastAutoGenerator.create("jdbc:mysql://35.228.23.154:3306/rucn?serverTimezone=GMT%2b8", "root", "ChatP@ss7633")
+        FastAutoGenerator.create("jdbc:mysql://free1.mysql.database.azure.com/rucn?characterEncoding=utf8&useSSL=true&requireSSL=true", "root_azure", "Qq5515150")
                 .globalConfig(builder -> {
                     builder.author("Wen") // 设置作者
                             .fileOverride() // 覆盖已生成文件
@@ -28,7 +28,7 @@ public class CodeGenerator {
 //                    builder.mapperBuilder().enableMapperAnnotation().build();
                     builder.controllerBuilder().enableHyphenStyle()  // 开启驼峰转连字符
                             .enableRestStyle();  // 开启生成@RestController 控制器
-                    builder.addInclude("sys_others") // 设置需要生成的表名
+                    builder.addInclude("sys_article") // 设置需要生成的表名
                             .addTablePrefix("t_", "sys_"); // 设置过滤表前缀
                 })
 //                .templateEngine(new FreemarkerTemplateEngine()) // 使用Freemarker引擎模板，默认的是Velocity引擎模板

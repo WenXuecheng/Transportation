@@ -63,7 +63,7 @@ public class OrderDto implements Serializable {
 
     private  Integer orderStatus;
 
-    private  Double rmb;
+    private  Double usd;
 
     private  Double rubs;
 }

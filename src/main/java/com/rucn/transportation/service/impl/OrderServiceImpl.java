@@ -36,13 +36,4 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         emailService.sendMailOrderInfo(order);
     }
 
-    @Override
-    public void sendOrderPay(Order order) {
-        emailService.sendMailOrderPay(order);
-    }
-
-    @Override
-    public void sendOrderOk(Order order) {
-        emailService.sendMailOrderOk(order);
-    }
 }

@@ -7,7 +7,7 @@
 
         <el-container>
             <el-header style="border-bottom: 1px solid #ccc;">
-                <Header :collapseBtnClass="collapseBtnClass" @asideCollapse="collapse" :user="user"/>
+                <Header ref="myHeader" :collapseBtnClass="collapseBtnClass" @asideCollapse="collapse" :user="user"/>
             </el-header>
 
             <el-main>
@@ -72,9 +72,16 @@ export default {
         loadMenu() {
             let username = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).username : ""
             this.request.get("/menu/username/" + username).then(res => {
-                res = JSON.parse(JSON.stringify(res.data))
-                this.menus= res
-                this.opens = res.map(v => v.id + '')
+                if( res.code === '200')
+                {
+                    res = JSON.parse(JSON.stringify(res.data))
+                    this.menus= res
+                    this.opens = res.map(v => v.id + '')
+                }
+
+                if (res.code ==='401'){
+                    this.$refs.myHeader.logout()
+                }
             })
         }
     }

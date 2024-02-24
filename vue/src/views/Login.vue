@@ -57,7 +57,7 @@
             </div>
         </nav>
         <main class="main">
-            <section class="py-xl bg-cover bg-size--cover" style="background-image: url('/assets/images/backgrounds/img-1.jpg')">
+            <section class="py-xl bg-cover bg-size--cover" style="background-image: url('/assets/images/backgrounds/img-5.jpg')">
                 <span class="mask bg-primary alpha-6"></span>
                 <div class="container d-flex align-items-center no-padding">
                     <div class="col">
@@ -69,19 +69,33 @@
                                             <span class="btn-inner--icon" ><i class="fas fa-arrow-left"></i></span>
                                         </a>
                                         <span class="clearfix"></span>
-                                        <h4 class="heading h3 text-white pt-3 pb-5">С возвращением,<br>
-                                            войти в свой аккаунт.</h4>
+                                        <h4 class="heading h3 text-white pt-3 pb-5">С Welcome back,<br>
+                                            login to your account.</h4>
+<!--                                        <el-form :model="user" :rules="rules" ref="userForm" >-->
+<!--                                            <el-form-item prop="username">-->
+<!--                                                <el-input size="medium" style="margin: 10px 0" prefix-icon="el-icon-user" v-model="user.username"></el-input>-->
+<!--                                            </el-form-item>-->
+<!--                                            <el-form-item prop="password">-->
+<!--                                                <el-input size="medium" style="margin: 10px 0" prefix-icon="el-icon-lock" show-password v-model="user.password"></el-input>-->
+<!--                                            </el-form-item>-->
+<!--                                            <el-form-item style="margin: 10px 0; text-align: right">-->
+<!--                                                <el-button v-no-more-click type="warning" size="small"  autocomplete="off" @click="login">Вход</el-button>-->
+<!--                                                <el-button type="primary" size="small"  autocomplete="off" @click="$router.push('/register')">Регистрация</el-button>-->
+<!--                                            </el-form-item>-->
+<!--                                        </el-form>-->
                                         <el-form :model="user" :rules="rules" ref="userForm" >
                                             <el-form-item prop="username">
-                                                <el-input size="medium" style="margin: 10px 0" prefix-icon="el-icon-user" v-model="user.username"></el-input>
+                                            <div class="form-group">
+                                                <el-input size="big" placeholder="User" v-model="user.username"></el-input>
+                                            </div>
                                             </el-form-item>
                                             <el-form-item prop="password">
-                                                <el-input size="medium" style="margin: 10px 0" prefix-icon="el-icon-lock" show-password v-model="user.password"></el-input>
+                                            <div class="form-group">
+                                                <el-input size="big"  placeholder="Password" show-password v-model="user.password"></el-input>
+                                            </div>
                                             </el-form-item>
-                                            <el-form-item style="margin: 10px 0; text-align: right">
-                                                <el-button v-no-more-click type="warning" size="small"  autocomplete="off" @click="login">Вход</el-button>
-                                                <el-button type="primary" size="small"  autocomplete="off" @click="$router.push('/register')">Регистрация</el-button>
-                                            </el-form-item>
+                                            <div class="text-right mt-4"><a href="/forgetpassword" class="text-white">Forgot password?</a></div>
+                                            <button v-no-more-click class="btn btn-block btn-lg bg-white mt-4" @click="login">Sign in</button>
                                         </el-form>
                                     </div>
                                 </div>
@@ -158,11 +172,11 @@ export default {
             rules: {
                 username: [
                     { required: true, message: 'Пожалуйста, введите ваше имя пользователя', trigger: 'blur' },
-                    { min: 3, max: 10, message: 'длина от 3 до 5 символов', trigger: 'blur' }
+                    { min: 3, max: 50, message: 'длина от 3 до 50 символов', trigger: 'blur' }
                 ],
                 password: [
                     { required: true, message: 'Пожалуйста, введите пароль', trigger: 'blur' },
-                    { min: 1, max: 20, message: 'Длина от 1 до 20 символов', trigger: 'blur' }
+                    { min: 1, max: 50, message: 'Длина от 1 до 50 символов', trigger: 'blur' }
                 ],
             },
             tokenIswork: true
@@ -175,7 +189,7 @@ export default {
                 if (this.user.role === 'ROLE_USER')
                 {
                     this.$router.push("/front/home").catch(() =>{})
-                } else {
+                } else if(this.user.role === 'ROLE_SU') {
                     this.$router.push("/manage/Dashbord").catch(() =>{})
                 }
             }
@@ -186,7 +200,20 @@ export default {
         changeTokenIswork(state){
             this.tokenIswork = state
         },
+        logout(){
+            this.$store.commit("logout")
+        }
+        ,
         login() {
+            const loading = this.$loading({
+                lock: true,
+                text: 'Loading',
+                spinner: 'el-icon-loading',
+                background: 'rgba(0, 0, 0, 0.8)'
+            });
+            setTimeout(() => {
+                loading.close();
+            }, 10000);
             this.$refs['userForm'].validate((valid) => {
                 if (valid) {  // 表单校验合法
                     this.request.post("/user/login", this.user).then(res => {
@@ -204,14 +231,18 @@ export default {
                                     } else {
                                         this.$router.push("/manage").catch(() =>{})
                                     }
+                                    loading.close();
                                 }
                             } else {
                                 this.$message.error("Неправильное имя пользователя или пароль")
+                                loading.close();
                             }
                         } catch (e){
                             this.$message.error(e)
                         }
                     })
+                } else {
+                    loading.close();
                 }
             });
         }

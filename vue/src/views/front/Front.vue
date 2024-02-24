@@ -60,7 +60,7 @@
                 </div>
                 <div class="content-inner content-docs">
                     <el-main>
-                        <router-view :user="user" />
+                        <router-view :user="user" @logout="logout"/>
                     </el-main>
                 </div>
             </section>

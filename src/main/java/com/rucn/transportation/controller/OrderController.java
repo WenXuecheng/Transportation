@@ -9,10 +9,12 @@ import com.rucn.transportation.common.Constants;
 import com.rucn.transportation.common.Result;
 import com.rucn.transportation.common.RoleEnum;
 import com.rucn.transportation.entity.Order;
+import com.rucn.transportation.entity.OrderDelivery;
 import com.rucn.transportation.entity.User;
 import com.rucn.transportation.entity.dto.OrderDto;
 import com.rucn.transportation.exception.ServiceException;
 import com.rucn.transportation.mapper.FilesMapper;
+import com.rucn.transportation.mapper.OrderDeliveryMapper;
 import com.rucn.transportation.mapper.OrderFileMapper;
 import com.rucn.transportation.mapper.OrderMapper;
 import com.rucn.transportation.service.IOrderFileService;
@@ -34,7 +36,7 @@ import java.util.Random;
  * 前端控制器
  * </p>
  *
- * @author 青哥哥
+ * @author
  * @since 2022-02-10
  */
 @RestController
@@ -46,6 +48,8 @@ public class OrderController {
         @Resource
         private OrderMapper orderMapper;
         @Resource
+        private OrderDeliveryMapper orderDeliveryMapper;
+        @Resource
         private  IUserService userService;
         @Resource
         private OrderFileMapper orderFileMapper;
@@ -53,14 +57,12 @@ public class OrderController {
         private IOrderFileService iOrderFileService;
         @Resource
         private FilesMapper filesMapper;
+//*********************************************用户权限
         // 生成订单
         @PostMapping
         public Result save(@RequestBody Order order) {
                 User user = TokenUtils.getCurrentUser();
-                Order exitOrder;
                 String orderName;
-                Integer a = order.getId();
-                String b = order.getOrderName();
                 // orderName 等于null 或者 "" 的情况继续处理
                 if (order.getOrderName().equals(""))
                 {
@@ -71,33 +73,84 @@ public class OrderController {
                         throw new ServiceException(Constants.CODE_500, "提交失败1");
                 }
                 try{
-                        orderName = this.generateordersName();
-                        exitOrder = orderMapper.getByOrdername(orderName);
-
-                } catch (Exception e){
-                        throw new ServiceException(Constants.CODE_500, "提交失败2");
-                }
-                if (exitOrder == null) {
+                        //设置订单号
+                        orderName = user.getUsername();
                         order.setOrderName(orderName);
+                        order.setIsConfirmed(false);
                         // 发送订单信息的邮件
                         try {
                                 orderService.sendMailOfOrderDetails(user, order);
                         } catch (Exception e) {
                                 throw new ServiceException(Constants.CODE_500, "");
                         }
-                        return Result.success(orderService.saveOrUpdate(order));
-                } else {
-                        throw new ServiceException(Constants.CODE_500, "提交失败3");
+                        orderService.saveOrUpdate(order);
+                        Integer id = order.getId();
+                        return Result.success(id);
+
+                } catch (Exception e){
+                        throw new ServiceException(Constants.CODE_500, "提交失败");
                 }
         }
-
+        //用户查询订单
+        @GetMapping("/username")
+        public Result findByUsername() {
+                User user = TokenUtils.getCurrentUser();
+                List<Order> order = orderMapper.selectByUsername(user.getUsername());
+                return Result.success(order);
+        }
+//*********************************************管理员全权，用户不能编辑在订单确认之后
+        //用户删除订单
+        @DeleteMapping("/orderId/{orderId}")
+        public Result deleteByUsername(@PathVariable Integer orderId) {
+                Order order;
+                try {
+                        order = orderMapper.getByOrderId(orderId);
+                }catch (Exception e) {
+                        throw new ServiceException(Constants.CODE_500, "系统错误");
+                }
+                User user=TokenUtils.getCurrentUser();
+                if(user.getRole().equals("ROLE_ADMIN") || user.getRole().equals("ROLE_SU"))
+                {
+                        orderFileMapper.removeByOrderId(orderId);
+                        orderDeliveryMapper.removeByOrderId(orderId);
+                        return Result.success(orderService.removeById(orderId));
+                }
+                if (order.getIsConfirmed()){
+                        throw new ServiceException(Constants.CODE_500, "订单已确认，删除失败");
+                }
+                orderFileMapper.removeByOrderId(orderId);
+                orderDeliveryMapper.removeByOrderId(orderId);
+                return Result.success(orderService.removeById(order.getId()));
+        }
 
         @PostMapping("/update")
         public Result update(@RequestBody Order order) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        if (order.getIsConfirmed()){
+                                throw new ServiceException(Constants.CODE_500, "订单已确认，删除失败");
+                        }
+                }
                 return Result.success(orderService.saveOrUpdate(order));
         }
+        @PostMapping("/changeOrderNum")
+        public Result changeOrderNum(@RequestBody Order order) {
+                User admin = TokenUtils.getCurrentUser();
+                Order one = orderService.getById(order.getId());
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        if (one.getIsConfirmed()){
+                                throw new ServiceException(Constants.CODE_500, "订单已确认，删除失败");
+                        }
+                }
+                return Result.success(orderMapper.changeOrderNum(order.getDeliveryNum(),order.getId()));
+        }
+//*********************************************管理权限
         @DeleteMapping("/{id}")
         public Result delete(@PathVariable Integer id) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 orderService.removeById(id);
                 return Result.success();
         }
@@ -114,30 +167,6 @@ public class OrderController {
                 }
                 return Result.success();
         }
-        //发送支付邮件
-        @GetMapping("/email/pay/{id}")
-        public Result sendOrderPay(@PathVariable Integer id) {
-                Order order = orderService.getById(id);
-                orderService.sendOrderPay(order);
-                try{
-
-                } catch (Exception e){
-                        throw new ServiceException(Constants.CODE_500, "发送失败");
-                }
-                return Result.success();
-        }
-        //发送确认订单邮件
-        @GetMapping("/email/ok/{id}")
-        public Result sendOrderPOk(@PathVariable Integer id) {
-                Order order = orderService.getById(id);
-                try{
-                        orderService.sendOrderOk(order);
-                } catch (Exception e){
-                        throw new ServiceException(Constants.CODE_500, "发送失败");
-                }
-                return Result.success();
-        }
-
 
 
         @PostMapping("/del/batch")
@@ -152,11 +181,19 @@ public class OrderController {
 
         @GetMapping
         public Result findAll() {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 return Result.success(orderService.list());
         }
 
         @GetMapping("/{id}")
         public Result findOne(@PathVariable Integer id) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 return Result.success(orderService.getById(id));
         }
 
@@ -195,39 +232,6 @@ public class OrderController {
                 return Result.success(orderMapper.countOrderTurnover());
         }
 
-
-        @GetMapping("/username")
-        public Result findByUsername() {
-                User user = TokenUtils.getCurrentUser();
-                List<Order> order = orderMapper.selectByUsername(user.getUsername());
-                return Result.success(order);
-        }
-
-//删除订单
-        @DeleteMapping("/ordername/{ordername}")
-        public Result deleteByUsername(@PathVariable String ordername) {
-                if (StrUtil.isBlank(ordername)) {
-                        throw new ServiceException(Constants.CODE_501, "没有该订单");
-                }
-                Order order;
-                try {
-                        order = orderMapper.getByOrdername(ordername);
-                }catch (Exception e) {
-                        throw new ServiceException(Constants.CODE_500, "系统错误");
-                }
-                if (order.getIsConfirmed()){
-                        User user=TokenUtils.getCurrentUser();
-                        if(user.getRole().equals("ROLE_ADMIN") || user.getRole().equals("ROLE_SU"))
-                        {
-                                orderFileMapper.removeByOrderName(ordername);
-                                return Result.success(orderService.removeById(order.getId()));
-                        }
-                        throw new ServiceException(Constants.CODE_500, "订单已确认，删除失败");
-                }
-                //找到相关的ulr
-                orderFileMapper.removeByOrderName(ordername);
-                return Result.success(orderService.removeById(order.getId()));
-        }
 
         @GetMapping("/export")
         public void export(HttpServletResponse response) throws Exception {
@@ -273,17 +277,6 @@ public class OrderController {
                 out.close();
                 writer.close();
 
-        }
-        private String generateordersName() {
-                StringBuilder sb = new StringBuilder();
-                char firstChar = (char) (new Random().nextInt(26) + 'A');
-                sb.append(firstChar);
-                for (int i = 0; i < 5; i++) {
-                        int digit = new Random().nextInt(10);
-                        sb.append(digit);
-                }
-
-                return sb.toString();
         }
 }
 

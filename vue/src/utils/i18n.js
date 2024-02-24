@@ -29,7 +29,7 @@ function loadLocaleMessages() {
 }
 function getLanguage() {
     // 第一次进入页面或手动清除设置默认语言
-    localStorage.getItem('lang') ? null : localStorage.setItem('lang', "cn")
+    localStorage.getItem('lang') ? null : localStorage.setItem('lang', "ru")
     let locale = localStorage.getItem('lang')
     return locale
 }

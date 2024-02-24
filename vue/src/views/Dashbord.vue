@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-row :gutter="10" style="margin-bottom: 60px">
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card style="color: #409EFF">
           <div><i class="el-icon-user-solid" /> 用户总数</div>
           <div style="padding: 10px 0; text-align: center; font-weight: bold">
@@ -25,14 +25,22 @@
                 </div>
             </el-card>
         </el-col>
-      <el-col :span="6">
+      <el-col :span="4">
         <el-card style="color: #67C23A">
-          <div><i class="el-icon-bank-card" /> 人民币对卢布汇率</div>
+          <div><i class="el-icon-bank-card" /> 人民币兑卢布汇率</div>
           <div style="padding: 10px 0; text-align: center; font-weight: bold">
               <el-button type="success" @click="dialogVisible = true">{{this.orderInfo.exchangeRates}}</el-button>
           </div>
         </el-card>
       </el-col>
+        <el-col :span="4">
+            <el-card style="color: #67C23A">
+                <div><i class="el-icon-bank-card" /> 美元兑人民币汇率</div>
+                <div style="padding: 10px 0; text-align: center; font-weight: bold">
+                    <el-button type="success" @click="dialogVisibleUs = true">{{this.orderInfo.usrmbRates}}</el-button>
+                </div>
+            </el-card>
+        </el-col>
     </el-row>
 
     <el-row :gutter="10" style="margin-bottom: 60px">
@@ -84,32 +92,23 @@
         </el-col>
     </el-row>
     <el-row :gutter="10" style="margin-bottom: 60px">
-      <el-col :span="8">
+      <el-col :span="16">
           <el-card >
-              <p>{{photoandannouncement.announcement1.p1}}</p>
-              <p>{{photoandannouncement.announcement1.p2}}</p>
+              <div v-html="html"></div>
               <el-button type="primary" @click="dialogVisibleA1 = true">编 辑</el-button>
           </el-card>
       </el-col>
       <el-col :span="8">
           <el-card >
-              <h3 style="text-align: center">{{photoandannouncement.announcement2.title}}</h3>
-              <p>{{photoandannouncement.announcement2.p1}}</p>
-              <p>{{photoandannouncement.announcement2.p2}}</p>
+              <h3 style="text-align: center">{{photoandannouncement.announcement1.title}}</h3>
+              <p style="text-align: center">{{photoandannouncement.announcement1.p1}}</p>
+              <p style="text-align: center">{{photoandannouncement.announcement1.p2}}</p>
               <el-button type="primary" @click="dialogVisibleA2 = true">编 辑</el-button>
           </el-card>
       </el-col>
-      <el-col :span="8">
-            <el-card >
-                <h3 style="text-align: center">{{photoandannouncement.announcement3.title}}</h3>
-                <p>{{photoandannouncement.announcement3.p1}}</p>
-                <p>{{photoandannouncement.announcement3.p2}}</p>
-                <el-button type="primary" @click="dialogVisibleA3 = true">编 辑</el-button>
-            </el-card>
-      </el-col>
     </el-row>
       <el-dialog
-              title="更改汇率"
+              title="更改Rub汇率"
               :visible.sync="dialogVisible"
               width="30%">
           <el-input v-model="orderInfo.exchangeRates" placeholder="请输入内容"></el-input>
@@ -118,15 +117,38 @@
           <el-button type="primary" @click="changeRatesFunc">确 定</el-button>
           </span>
       </el-dialog>
-
+      <el-dialog
+              title="更改Dollar汇率"
+              :visible.sync="dialogVisibleUs"
+              width="30%">
+          <el-input v-model="orderInfo.usrmbRates" placeholder="请输入内容"></el-input>
+          <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisibleUs = false">取 消</el-button>
+          <el-button type="primary" @click="changeUsrmbRatesFunc">确 定</el-button>
+          </span>
+      </el-dialog>
 
       <el-dialog
-              title="更改汇率详情"
+              title="更改公告1"
+              :before-close="handleClose"
               :visible.sync="dialogVisibleA1"
-              width="30%">
-          <el-input type="textarea" v-model="photoandannouncement.announcement1.p1" placeholder="请输入内容"></el-input>
-          <div style="margin: 20px 0;"></div>
-          <el-input type="textarea" v-model="photoandannouncement.announcement1.p2" placeholder="请输入内容"></el-input>
+              width="80%">
+          <div style="border: 1px solid #ccc;">
+            <Toolbar
+                    style="border-bottom: 1px solid #ccc"
+                    :editor="editor"
+                    :defaultConfig="toolbarConfig"
+                    :mode="mode"
+            />
+            <Editor
+                    style="height: 500px; overflow-y: hidden;"
+                    v-model="html"
+                    :defaultConfig="editorConfig"
+                    :mode="mode"
+                    @onCreated="onCreated"
+                    @onChange="onChange"
+            />
+          </div>
           <span slot="footer" class="dialog-footer">
           <el-button @click="dialogVisibleA1 = false">取 消</el-button>
           <el-button type="primary" @click="changeInfoA1">确 定</el-button>
@@ -134,34 +156,22 @@
       </el-dialog>
 
       <el-dialog
-              title="更改公告1"
+              title="更改公告2"
               :visible.sync="dialogVisibleA2"
               width="30%">
-          <el-input type="textarea" v-model="photoandannouncement.announcement2.title" placeholder="请输入内容"></el-input>
+          <el-input type="textarea" v-model="photoandannouncement.announcement1.title" placeholder="请输入内容"></el-input>
           <div style="margin: 20px 0;"></div>
-          <el-input type="textarea" v-model="photoandannouncement.announcement2.p1" placeholder="请输入内容"></el-input>
+          <el-input type="textarea" v-model="photoandannouncement.announcement1.p1" placeholder="请输入内容"></el-input>
           <div style="margin: 20px 0;"></div>
-          <el-input type="textarea" v-model="photoandannouncement.announcement2.p2" placeholder="请输入内容"></el-input>
+          <el-input type="textarea" v-model="photoandannouncement.announcement1.p2" placeholder="请输入内容"></el-input>
           <span slot="footer" class="dialog-footer">
           <el-button @click="dialogVisibleA2 = false">取 消</el-button>
           <el-button type="primary" @click="changeInfoA2">确 定</el-button>
           </span>
       </el-dialog>
 
-      <el-dialog
-              title="更改公告2"
-              :visible.sync="dialogVisibleA3"
-              width="30%">
-          <el-input type="textarea" v-model="photoandannouncement.announcement3.title" placeholder="请输入内容"></el-input>
-          <div style="margin: 20px 0;"></div>
-          <el-input type="textarea" v-model="photoandannouncement.announcement3.p1" placeholder="请输入内容"></el-input>
-          <div style="margin: 20px 0;"></div>
-          <el-input type="textarea" v-model="photoandannouncement.announcement3.p2" placeholder="请输入内容"></el-input>
-          <span slot="footer" class="dialog-footer">
-          <el-button @click="dialogVisibleA3 = false">取 消</el-button>
-          <el-button type="primary" @click="changeInfoA3">确 定</el-button>
-          </span>
-      </el-dialog>
+
+
 
       <el-dialog
               title="更改展示1"
@@ -217,29 +227,47 @@
 
 <script>
 import {serverIp, serverPort,http} from "../../public/config";
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 export default {
-  name: "Dashbord",
-  data() {
-    return {
+    components: { Editor, Toolbar },
+    name: "Dashbord",
+    data() {
+      return {
+        //富文本公告
+        editor: null,
+        html: '<p>请编辑</p>',
+        toolbarConfig: { },
+        editorConfig: { placeholder: '请输入内容...',
+            maxLength : 100000,
+            MENU_CONF:{
+                uploadImage:{
+                    fieldName: 'file',
+                    server: http+"://"+serverIp+":" + serverPort + "/file/uploadImg",
+                    timeout: 30 * 1000,
+                    allowedFileTypes: ['image/*'],
+                }
+            }
+        },
+        mode: 'default', // or 'simple'
+        //订单信息
         orderInfo: {
             numUser: 0,
             totalOrderTurnover: 0,
             totalOrder: 0,
             exchangeRates: null,
+            usrmbRates: null,
         },
         dialogVisible : false,
+        dialogVisibleUs: false,
         dialogVisibleA1: false,
         dialogVisibleA2: false,
-        dialogVisibleA3: false,
         dialogVisiblep1: false,
         dialogVisiblep2: false,
         photoandannouncement: {
             photo1: 'https://www.ups.com/assets/resources/supplychain/images/350x197/m15-350x197-fast-fulfillment-assembly.jpg',
             photo2: 'https://www.ups.com/assets/resources/supplychain/images/350x197/m15-350x197-fast-fulfillment-assembly.jpg',
             photo3: 'https://www.ups.com/assets/resources/supplychain/images/350x197/m15-350x197-fast-fulfillment-assembly.jpg',
-            announcement1: {p1:"None",p2:"None"},
-            announcement2: {title: "None", p1:"None", p2:"None"},
-            announcement3: {title: "None", p1:"None", p2:"None"}
+            announcement1: {title: "None", p1:"None", p2:"None"},
         },
         fileListp1: [],
         limitnump1: 1,
@@ -252,16 +280,38 @@ export default {
         http: http
     }
   },
-  mounted() {
-      this.updateExchangeRate()
-      this.usernum()
-      this.ordernum()
-      this.totalOrderTurnovernum()
-      this.getphotoandannouncement()
-  },
+    mounted() {
+        this.updateExchangeRate()
+        this.updateUsrmbRate()
+        this.usernum()
+        this.ordernum()
+        this.totalOrderTurnovernum()
+        this.getphotoandannouncement()
+    },
     created() {
     },
+    //富文本
+    beforeDestroy() {
+        const editor = this.editor
+        if (editor == null) return
+        editor.destroy() // 组件销毁时，及时销毁编辑器
+    },
     methods: {
+        //对话框关闭提示
+        handleClose(done) {
+            this.$confirm('内容还没保存，是否关闭对话框？')
+                .then(_ => {
+                    done();
+                })
+                .catch(_ => {});
+        },
+      //富文本
+        onCreated(editor) {
+            this.editor = Object.seal(editor) // 一定要用 Object.seal() ，否则会报错
+        },
+        onChange(editor){
+
+        },
         //禁止页面滑动
         stop(){
             var box=function(e)
@@ -280,6 +330,18 @@ export default {
                 }
             })
 
+        },//改美元的汇率
+        changeUsrmbRatesFunc()
+        {
+            this.request.get("/others/1/UsRmbSet/"+this.orderInfo.usrmbRates).then(res => {
+                if (res.code == '200')
+                {
+                    this.updateExchangeRate()
+                    this.dialogVisibleUs = false
+                    this.$message.success("保存成功")
+                }
+            })
+
         },
         updateExchangeRate()
         {
@@ -287,6 +349,15 @@ export default {
                 if (res.code == '200')
                 {
                     this.orderInfo.exchangeRates = res.data
+                }
+            })
+        },
+        updateUsrmbRate()
+        {
+            this.request.get("/others/1/UsRmbGet/1").then(res => {
+                if (res.code == '200')
+                {
+                    this.orderInfo.usrmbRates = res.data
                 }
             })
         },
@@ -320,25 +391,27 @@ export default {
                 {
                     this.photoandannouncement = res.data
                     this.photoandannouncement.announcement1 = JSON.parse(res.data.announcement1)
-                    this.photoandannouncement.announcement2 = JSON.parse(res.data.announcement2)
-                    this.photoandannouncement.announcement3 = JSON.parse(res.data.announcement3)
                     this.responseAssemblies[0] = res.data.photo2
                     this.responseAssemblies[1] = res.data.photo3
                 }
             })
+            this.request.get("/article/"+ 1).then(res => {
+                console.log(res.data)
+                    if (res.code === '200')
+                    {
+                        this.html = res.data.content
+                    }
+            })
         },
+
         changeInfoA1(){
-            let data = {
+            let article = {
                 id: 1,
-                photo1: this.photoandannouncement.photo1,
-                photo2: this.photoandannouncement.photo1,
-                photo3: this.photoandannouncement.photo1,
-                announcement1: JSON.stringify(this.photoandannouncement.announcement1),
-                announcement2: JSON.stringify(this.photoandannouncement.announcement2),
-                announcement3: JSON.stringify(this.photoandannouncement.announcement3)
+                title: "",
+                content: this.html
             }
-            this.request.post("/others", data).then(res =>{
-                if (res === true){
+            this.request.post("/article", article).then(res =>{
+                if (res.code === '200'){
                     this.getphotoandannouncement()
                     this.$message.success("修改成功")
                     this.dialogVisibleA1 = false
@@ -352,11 +425,9 @@ export default {
             let data = {
                 id: 1,
                 photo1: this.photoandannouncement.photo1,
-                photo2: this.photoandannouncement.photo1,
-                photo3: this.photoandannouncement.photo1,
+                photo2: this.photoandannouncement.photo2,
+                photo3: this.photoandannouncement.photo3,
                 announcement1: JSON.stringify(this.photoandannouncement.announcement1),
-                announcement2: JSON.stringify(this.photoandannouncement.announcement2),
-                announcement3: JSON.stringify(this.photoandannouncement.announcement3)
             }
             this.request.post("/others", data).then(res =>{
                 if (res === true){
@@ -369,27 +440,8 @@ export default {
 
             })
         },
-        changeInfoA3(){
-            let data = {
-                id: 1,
-                photo1: this.photoandannouncement.photo1,
-                photo2: this.photoandannouncement.photo1,
-                photo3: this.photoandannouncement.photo1,
-                announcement1: JSON.stringify(this.photoandannouncement.announcement1),
-                announcement2: JSON.stringify(this.photoandannouncement.announcement2),
-                announcement3: JSON.stringify(this.photoandannouncement.announcement3)
-            }
-            this.request.post("/others", data).then(res =>{
-                if (res === true){
-                    this.getphotoandannouncement()
-                    this.$message.success("修改成功")
-                    this.dialogVisibleA3 = false
-                } else {
-                    this.$message.error("编辑失败")
-                }
 
-            })
-        },
+        //图片上传
         uploadFileErrorp1(err, file, fileList) {
             this.$message.error(this.$t('message.uploadFailed').toString())
         },
@@ -420,14 +472,11 @@ export default {
                 photo2: this.photoandannouncement.photo2,
                 photo3: this.photoandannouncement.photo3,
                 announcement1: JSON.stringify(this.photoandannouncement.announcement1),
-                announcement2: JSON.stringify(this.photoandannouncement.announcement2),
-                announcement3: JSON.stringify(this.photoandannouncement.announcement3)
             }
             this.request.post("/others", data).then(res =>{
                 if (res === true){
                     this.getphotoandannouncement()
                     this.$message.success("修改成功")
-                    this.dialogVisibleA3 = false
                 } else {
                     this.$message.error("编辑失败")
                 }
@@ -464,28 +513,26 @@ export default {
             }
             this.responseAssemblies[this.flag] = response
             this.flag = this.flag +1
-            console.log(this.responseAssemblies[0])
-            console.log(this.responseAssemblies[1])
             let data = {
                 id: 1,
                 photo1: this.photoandannouncement.photo1,
                 photo2: this.responseAssemblies[0],
                 photo3: this.responseAssemblies[1],
                 announcement1: JSON.stringify(this.photoandannouncement.announcement1),
-                announcement2: JSON.stringify(this.photoandannouncement.announcement2),
-                announcement3: JSON.stringify(this.photoandannouncement.announcement3)
             }
             this.request.post("/others", data).then(res =>{
                 if (res === true){
                     this.getphotoandannouncement()
                     this.$message.success("修改成功")
-                    this.dialogVisibleA3 = false
                 } else {
                     this.$message.error("编辑失败")
                 }
 
             })
         },
+        logout(){
+            this.$emit("logout")
+        }
     }
 }
 </script>
@@ -515,3 +562,4 @@ export default {
     display: block;
 }
 </style>
+<style src="@wangeditor/editor/dist/css/style.css"></style>

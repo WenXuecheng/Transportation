@@ -1,6 +1,7 @@
 package com.rucn.transportation.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
@@ -12,7 +13,7 @@ import lombok.Setter;
  * 
  * </p>
  *
- * @author Wen
+ * @author WeDI
  * @since 2023-05-29
  */
 @Getter
@@ -24,14 +25,9 @@ public class OrderFile implements Serializable {
 
       @TableId(value = "id", type = IdType.AUTO)
       private Integer id;
-
-    private String orderName;
-
+    @TableField(value = "orderD_id")
+    private Integer orderDId;
     private String url;
-
-    private String userName;
-
-    private Boolean adminUp;
-
+    private Integer orderId;
 
 }

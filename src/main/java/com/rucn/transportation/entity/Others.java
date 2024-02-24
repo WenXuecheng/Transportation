@@ -28,12 +28,12 @@ public class Others implements Serializable {
       private Integer id;
 
     private Double exchangeRate;
+    private Double usrmbRate;
+
     private String photo1;
     private String photo2;
     private String photo3;
 
     private String announcement1;
-    private String announcement2;
-    private String announcement3;
 
 }

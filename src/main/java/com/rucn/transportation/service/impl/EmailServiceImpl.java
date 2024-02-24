@@ -1,6 +1,7 @@
 package com.rucn.transportation.service.impl;
 
 import cn.hutool.core.lang.Dict;
+import cn.hutool.crypto.SecureUtil;
 import cn.hutool.extra.mail.Mail;
 import cn.hutool.extra.mail.MailAccount;
 import cn.hutool.extra.template.Template;
@@ -11,6 +12,7 @@ import com.rucn.transportation.entity.Order;
 import com.rucn.transportation.entity.User;
 import com.rucn.transportation.entity.dto.EmailDto;
 import com.rucn.transportation.entity.dto.OrderDto;
+import com.rucn.transportation.entity.dto.UserDTO;
 import com.rucn.transportation.service.EmailService;
 import com.rucn.transportation.utils.VerificationCodeUtil;
 import lombok.RequiredArgsConstructor;
@@ -113,7 +115,6 @@ public class EmailServiceImpl implements EmailService {
         orderDto.setPhone(order.getPhone());
         orderDto.setDetails(order.getDetails());
         orderDto.setRemark(order.getRemark());
-        orderDto.setPay(order.getPay());
         // 获取发送邮箱验证码的HTML模板
         TemplateEngine engine = TemplateUtil.createEngine(new TemplateConfig("templates", TemplateConfig.ResourceMode.CLASSPATH));
         Template template = engine.getTemplate("email-order-details.ftl");
@@ -125,26 +126,10 @@ public class EmailServiceImpl implements EmailService {
         dict.set("ReceiveAdress", orderDto.getReceiveAdress());
         dict.set("DateOut", orderDto.getDateOut());
         dict.set("DeliveryNum", orderDto.getDeliveryNum());
-        if (orderDto.getOthers().equals("没有/自取")){
-            orderDto.setOthers("No / Self Pick Up");
-        } else if (orderDto.getOthers().equals("没有/没有")){
-            orderDto.setOthers("No / No");
-        } else if (orderDto.getOthers().equals("保险/自取")){
-            orderDto.setOthers("Insurance / Self Pick Up");
-        } else if (orderDto.getOthers().equals("保险/没有")){
-            orderDto.setOthers("Insurance / No");
-        }
-        dict.set("Others", orderDto.getOthers());
         dict.set("Name", orderDto.getName());
         dict.set("Phone", orderDto.getPhone());
         dict.set("Details", orderDto.getDetails());
         dict.set("Remark", orderDto.getRemark());
-        if (orderDto.getPay().equals("在线付款")){
-            orderDto.setPay("Online Payment");
-        } else if (orderDto.getPay().equals("到店付款")){
-            orderDto.setPay("Payment in shop");
-        }
-        dict.set("Pay", orderDto.getPay());
         this.send(new EmailDto(Collections.singletonList(email),
                 "Order details", template.render(dict)));
 
@@ -164,7 +149,6 @@ public class EmailServiceImpl implements EmailService {
         orderDto.setPhone(order.getPhone());
         orderDto.setDetails(order.getDetails());
         orderDto.setRemark(order.getRemark());
-        orderDto.setPay(order.getPay());
         orderDto.setWeight(order.getWeight());
         // 获取发送邮箱验证码的HTML模板
         TemplateEngine engine = TemplateUtil.createEngine(new TemplateConfig("templates", TemplateConfig.ResourceMode.CLASSPATH));
@@ -177,70 +161,45 @@ public class EmailServiceImpl implements EmailService {
         dict.set("ReceiveAdress", orderDto.getReceiveAdress());
         dict.set("DateOut", orderDto.getDateOut());
         dict.set("DeliveryNum", orderDto.getDeliveryNum());
-        if (orderDto.getOthers().equals("没有/自取")){
-            orderDto.setOthers("No / Self Pick Up");
-        } else if (orderDto.getOthers().equals("没有/没有")){
-            orderDto.setOthers("No / No");
-        } else if (orderDto.getOthers().equals("保险/自取")){
-            orderDto.setOthers("Insurance / Self Pick Up");
-        } else if (orderDto.getOthers().equals("保险/没有")){
-            orderDto.setOthers("Insurance / No");
-        }
-        dict.set("Others", orderDto.getOthers());
         dict.set("Name", orderDto.getName());
         dict.set("Phone", orderDto.getPhone());
         dict.set("Details", orderDto.getDetails());
         dict.set("Remark", orderDto.getRemark());
-        if (orderDto.getPay().equals("在线付款")){
-            orderDto.setPay("Online Payment");
-        } else if (orderDto.getPay().equals("到店付款")){
-            orderDto.setPay("Payment in shop");
-        }
-        dict.set("Pay", orderDto.getPay());
         dict.set("Weight", orderDto.getWeight());
         this.send(new EmailDto(Collections.singletonList(orderDto.getEmail()),
                 "Order changed", template.render(dict)));
     }
 
-    public void sendMailOrderPay(Order order) {
-        OrderDto orderDto = new OrderDto();
-        orderDto.setEmail(order.getEmail());
-        orderDto.setOrderName(order.getOrderName());
-        orderDto.setWeight(order.getWeight());
-        orderDto.setRmb(order.getRmb());
-        orderDto.setPay(order.getPay());
-        orderDto.setRubs(order.getRubs());
+    public void sendUserInfo(User user) {
+        UserDTO userDto = new UserDTO();
+        userDto.setEmail(user.getEmail());
+        userDto.setUsername(user.getUsername());
+        userDto.setNickname(user.getNickname());
+        userDto.setOPassword(user.getOPassword());
+        userDto.setPhone(user.getPhone());
         // 获取发送邮箱验证码的HTML模板
         TemplateEngine engine = TemplateUtil.createEngine(new TemplateConfig("templates", TemplateConfig.ResourceMode.CLASSPATH));
-        Template template = engine.getTemplate("email-order-pay.ftl");
+        Template template = engine.getTemplate("email-register.ftl");
         Dict dict = Dict.create();
-        dict.set("email", orderDto.getEmail());
-        dict.set("OrderName", orderDto.getOrderName());
-        if (orderDto.getPay().equals("在线付款")){
-            orderDto.setPay("Online Payment");
-        } else if (orderDto.getPay().equals("到店付款")){
-            orderDto.setPay("Payment in shop");
-        }
-        dict.set("Pay", orderDto.getPay());
-        dict.set("Weight", orderDto.getWeight());
-        dict.set("rmb", orderDto.getPay());
-        dict.set("rubs", orderDto.getPay());
-        this.send(new EmailDto(Collections.singletonList(orderDto.getEmail()),
-                "Order " + orderDto.getOrderName() + " Billing", template.render(dict)));
+        dict.set("email", userDto.getEmail());
+        dict.set("UserName", userDto.getUsername());
+        dict.set("NickName", userDto.getNickname());
+        dict.set("Password", userDto.getOPassword());
+        dict.set("Phone", userDto.getPhone());
+        this.send(new EmailDto(Collections.singletonList(userDto.getEmail()),
+                "Welcome to Aurexp", template.render(dict)));
     }
 
 
-    public void sendMailOrderOk(Order order) {
-        OrderDto orderDto = new OrderDto();
-        orderDto.setEmail(order.getEmail());
-        orderDto.setOrderName(order.getOrderName());
+    public void sendPasswordEmail(User user) {
         // 获取发送邮箱验证码的HTML模板
         TemplateEngine engine = TemplateUtil.createEngine(new TemplateConfig("templates", TemplateConfig.ResourceMode.CLASSPATH));
-        Template template = engine.getTemplate("email-order-ok.ftl");
+        Template template = engine.getTemplate("email-password.ftl");
         Dict dict = Dict.create();
-        dict.set("OrderName", orderDto.getOrderName());
-        this.send(new EmailDto(Collections.singletonList(orderDto.getEmail()),
-                "Order " + orderDto.getOrderName() + " has been successfully paid", template.render(dict)));
+        dict.set("password", user.getOPassword());
+        dict.set("username", user.getUsername());
+        this.send(new EmailDto(Collections.singletonList(user.getEmail()),
+                "Forget password", template.render(dict)));
 
     }
 }

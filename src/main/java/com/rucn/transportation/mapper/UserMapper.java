@@ -8,8 +8,8 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 public interface UserMapper extends BaseMapper<User> {
 
-    @Update("update sys_user set password = #{newPassword} where username = #{username} and password = #{password}")
-    int updatePassword(UserPasswordDTO userPasswordDTO);
+    @Update("update sys_user set password = #{newPassword}, o_password = #{oPassword} where username = #{username} and password = #{password} and id = #{Id}")
+    int updatePassword(Integer Id, String username,String password, String newPassword,String oPassword);
 
     Page<User> findPage(Page<User> page, @Param("username") String username, @Param("email") String email, @Param("address") String address);
     @Select("select count(id) from sys_user")

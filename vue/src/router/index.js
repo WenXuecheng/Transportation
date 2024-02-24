@@ -15,60 +15,65 @@ const routes = [
     name: 'home',
     component: () => import('../views/Home.vue')
   },
-  {
-    path: '/delivery_cn',
-    name: 'delivery_cn',
-    component: () => import('../views/DeliveryCN.vue')
-  },
-  {
-    path: '/delivery_ru',
-    name: 'delivery_ru',
-    component: () => import('../views/DeliveryRU.vue')
-  },
-  {
-    path: '/delivery_condition',
-    name: 'delivery_condition',
-    component: () => import('../views/DeliveryCondition.vue')
-  },
-  {
-    path: '/service',
-    name: 'service',
-    component: () => import('../views/Service.vue')
-  },
-  {
-    path: '/service_pay',
-    name: 'service_pay',
-    component: () => import('../views/ServicePay.vue')
-  },
-  {
-    path: '/customs_clearance',
-    name: 'customs_clearance',
-    component: () => import('../views/CustomsClearance.vue')
-  },
-  {
-    path: '/marketplace',
-    name: 'marketplace',
-    component: () => import('../views/Marketplace.vue')
-  },
-  {
-    path: '/prohibited_goods',
-    name: 'prohibited_goods',
-    component: () => import('../views/ProhibitedGoods.vue')
-  },
-  {
-    path: '/rules_individuals',
-    name: 'rules_individuals',
-    component: () => import('../views/RulesIndividuals.vue')
-  },
-  {
-    path: '/faq',
-    name: 'faq',
-    component: () => import('../views/FAQ.vue')
-  },
+  // {
+  //   path: '/delivery_cn',
+  //   name: 'delivery_cn',
+  //   component: () => import('../views/DeliveryCN.vue')
+  // },
+  // {
+  //   path: '/delivery_ru',
+  //   name: 'delivery_ru',
+  //   component: () => import('../views/DeliveryRU.vue')
+  // },
+  // {
+  //   path: '/delivery_condition',
+  //   name: 'delivery_condition',
+  //   component: () => import('../views/DeliveryCondition.vue')
+  // },
+  // {
+  //   path: '/service',
+  //   name: 'service',
+  //   component: () => import('../views/Service.vue')
+  // },
+  // {
+  //   path: '/service_pay',
+  //   name: 'service_pay',
+  //   component: () => import('../views/ServicePay.vue')
+  // },
+  // {
+  //   path: '/customs_clearance',
+  //   name: 'customs_clearance',
+  //   component: () => import('../views/CustomsClearance.vue')
+  // },
+  // {
+  //   path: '/marketplace',
+  //   name: 'marketplace',
+  //   component: () => import('../views/Marketplace.vue')
+  // },
+  // {
+  //   path: '/prohibited_goods',
+  //   name: 'prohibited_goods',
+  //   component: () => import('../views/ProhibitedGoods.vue')
+  // },
+  // {
+  //   path: '/rules_individuals',
+  //   name: 'rules_individuals',
+  //   component: () => import('../views/RulesIndividuals.vue')
+  // },
+  // {
+  //   path: '/faq',
+  //   name: 'faq',
+  //   component: () => import('../views/FAQ.vue')
+  // },
   {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue')
+  },
+  {
+    path: '/forgetpassword',
+    name: 'ForgetPassword',
+    component: () => import('../views/ForgetPassword.vue')
   },
   {
     path: '/register',

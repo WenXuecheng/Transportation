@@ -1,0 +1,16 @@
+package com.rucn.transportation.mapper;
+
+import com.rucn.transportation.entity.Article;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+/**
+ * <p>
+ *  Mapper 接口
+ * </p>
+ *
+ * @author Wen
+ * @since 2023-08-08
+ */
+public interface ArticleMapper extends BaseMapper<Article> {
+
+}

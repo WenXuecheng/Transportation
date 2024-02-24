@@ -50,8 +50,6 @@ public class Order implements Serializable {
 
     private String remark;
 
-    private String pay;
-
     private String username;
 
     private Integer isDelete;
@@ -64,7 +62,7 @@ public class Order implements Serializable {
 
     private  Integer orderStatus;
 
-    private  Double rmb;
+    private  Double usd;
 
     private  Double rubs;
 }

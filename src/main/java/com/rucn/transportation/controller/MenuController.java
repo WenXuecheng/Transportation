@@ -2,6 +2,7 @@ package com.rucn.transportation.controller;
 
 
 import cn.hutool.core.util.StrUtil;
+import com.rucn.transportation.common.RoleEnum;
 import com.rucn.transportation.entity.Dict;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -13,6 +14,7 @@ import com.rucn.transportation.mapper.DictMapper;
 import com.rucn.transportation.mapper.RoleMapper;
 import com.rucn.transportation.mapper.RoleMenuMapper;
 import com.rucn.transportation.service.IUserService;
+import com.rucn.transportation.utils.TokenUtils;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -47,34 +49,58 @@ public class MenuController {
         // 新增或者更新
         @PostMapping
         public Result save(@RequestBody Menu menu) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 menuService.saveOrUpdate(menu);
                 return Result.success();
         }
 
         @DeleteMapping("/{id}")
         public Result delete(@PathVariable Integer id) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 menuService.removeById(id);
                 return Result.success();
         }
 
         @PostMapping("/del/batch")
         public Result deleteBatch(@RequestBody List<Integer> ids) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 menuService.removeByIds(ids);
                 return Result.success();
         }
 
         @GetMapping("/ids")
         public Result findAllIds() {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 return Result.success(menuService.list().stream().map(Menu::getId));
         }
 
         @GetMapping
         public Result findAll(@RequestParam(defaultValue = "") String name) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 return Result.success(menuService.findMenus(name));
         }
 
         @GetMapping("/{id}")
         public Result findOne(@PathVariable Integer id) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 return Result.success(menuService.getById(id));
         }
 
@@ -82,6 +108,10 @@ public class MenuController {
         public Result findPage(@RequestParam String name,
                                @RequestParam Integer pageNum,
                                @RequestParam Integer pageSize) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 QueryWrapper<Menu> queryWrapper = new QueryWrapper<>();
                 queryWrapper.like("name", name);
                 queryWrapper.orderByDesc("id");
@@ -90,6 +120,10 @@ public class MenuController {
 
         @GetMapping("/icons")
         public Result getIcons() {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 QueryWrapper<Dict> queryWrapper = new QueryWrapper<>();
                 queryWrapper.eq("type", Constants.DICT_TYPE_ICON);
                 return Result.success(dictMapper.selectList(queryWrapper));
@@ -97,6 +131,10 @@ public class MenuController {
 
         @GetMapping("/username/{username}")
         public Result findRoleMenus(@PathVariable String username) {
+                User admin = TokenUtils.getCurrentUser();
+                if (admin.getRole().equals(RoleEnum.ROLE_USER.toString())){
+                        throw new ServiceException(Constants.CODE_500, "权限认证失败");
+                }
                 if (!StrUtil.isBlank(username)) {
                         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
                         queryWrapper.eq("username", username);

@@ -70,8 +70,14 @@
                                         </a>
                                         <span class="clearfix"></span>
                                         <el-form :model="user" :rules="rules" ref="userForm">
-                                            <el-form-item prop="username">
-                                                <el-input placeholder="имя пользователя" size="medium" prefix-icon="el-icon-user" v-model="user.username"></el-input>
+                                            <el-form-item prop="email">
+                                                <el-input placeholder="адрес электронной почты" size="medium" prefix-icon="el-icon-c-scale-to-original"  v-model="user.email"></el-input>
+                                            </el-form-item >
+                                            <el-form-item style="text-align: right">
+                                                <el-button v-no-more-click-ten type="primary" size="small"  autocomplete="off" @click="changefield">Получить код</el-button>
+                                            </el-form-item>
+                                            <el-form-item prop="code">
+                                                <el-input placeholder="код" size="medium" prefix-icon=""  v-model="user.code"></el-input>
                                             </el-form-item>
                                             <el-form-item prop="password">
                                                 <el-input placeholder="пароль" size="medium" prefix-icon="el-icon-lock" show-password v-model="user.password"></el-input>
@@ -80,23 +86,14 @@
                                                 <el-input placeholder="подтвердите свой пароль" size="medium" prefix-icon="el-icon-lock" show-password v-model="user.confirmPassword"></el-input>
                                             </el-form-item>
                                             <el-form-item prop="nickname">
-                                                <el-input placeholder="псевдоним" size="medium" prefix-icon="el-icon-user"  v-model="user.nickname"></el-input>
-                                            </el-form-item>
-                                            <el-form-item prop="email">
-                                                <el-input placeholder="адрес электронной почты" size="medium" prefix-icon="el-icon-c-scale-to-original"  v-model="user.email"></el-input>
-                                            </el-form-item >
-                                            <el-form-item style="text-align: right">
-                                            <el-button v-no-more-click-ten type="primary" size="small"  autocomplete="off" @click="emailAuthentication">Получить код</el-button>
-                                            </el-form-item>
-                                            <el-form-item prop="code">
-                                                <el-input placeholder="код" size="medium" prefix-icon=""  v-model="user.code"></el-input>
+                                                <el-input placeholder="имя" size="medium" prefix-icon="el-icon-user"  v-model="user.nickname"></el-input>
                                             </el-form-item>
                                             <el-form-item prop="phone">
                                                 <el-input placeholder="ваш номер телефона ：89692184441" size="medium" prefix-icon="el-icon-mobile"  v-model="user.phone"></el-input>
                                             </el-form-item>
                                             <el-form-item style="margin: 5px 0; text-align: right">
-                                                <el-button v-no-more-click type="primary" size="small"  autocomplete="off" @click="login">Регистрация</el-button>
-                                                <el-button type="warning" size="small"  autocomplete="off" @click="$router.push('/login')">Назад к входу в систему</el-button>
+                                                <el-button v-no-more-click-ten  type="primary" size="small"  autocomplete="off" @click="login">Регистрация</el-button>
+                                                <el-button type="warning" size="small"  autocomplete="off" @click="$router.push('/login')">Назад</el-button>
                                             </el-form-item>
                                         </el-form>
                                     </div>
@@ -168,7 +165,10 @@
 
 
 import request from "@/utils/request";
-import {Message} from "element-ui";
+import {ValidStringPattern, ValidPhonePattern, ValidNicknamePattern} from "../../public/config";
+import {throttle} from "../utils/throttle"
+
+
 
 export default {
     name: "Login",
@@ -176,7 +176,7 @@ export default {
         var validateOthers = (rule, value, callback) => {
             if(this.isValidString(value) == false){
                 // this.$refs.ruleForm.validateField('checkPass');
-                callback(new Error('Используйте только цифры, буквы и @.*/-+'));
+                callback(new Error('только цифры, буквы и @.*/-+_'));
                 } else {
                 callback();
             }
@@ -184,7 +184,7 @@ export default {
         var validateNickname = (rule, value, callback) => {
             if(this.isValidStringNickname(value) == false){
                 // this.$refs.ruleForm.validateField('checkPass');
-                callback(new Error('Можно использовать только цифры, английский, китайский и русский языки'));
+                callback(new Error('цифры, английский и русский языки'));
             } else {
                 callback();
             }
@@ -200,93 +200,105 @@ export default {
         return {
             user: {},
             rules: {
-                username: [
-                    { required: true, message: 'имя пользователя', trigger: 'blur' },
-                    { min: 5, max: 20, message: 'Длина от 5 до 20 символов', trigger: 'blur' },
-                    { validator: validateOthers,  trigger: 'blur'}
-                ],
                 password: [
                     { required: true, message: 'пароль', trigger: 'blur' },
-                    { min: 5, max: 20, message: 'Длина от 5 до 20 символов', trigger: 'blur' },
+                    { min: 5, max: 50, message: 'Длина от 5 до 50 символов', trigger: 'blur' },
                     { validator: validateOthers,  trigger: 'blur'}
                 ],
                 confirmPassword: [
                     { required: true, message: 'пароль', trigger: 'blur' },
-                    { min: 5, max: 20, message: 'Длина от 5 до 20 символов', trigger: 'blur' },
+                    { min: 5, max: 50, message: 'Длина от 5 до 50 символов', trigger: 'blur' },
                     { validator: validateOthers,  trigger: 'blur'}
                 ],
                 nickname: [
                     { required: true, message: 'псевдоним', trigger: 'blur' },
-                    { min: 1, max: 10, message: 'Длина от 5 до 20 символов', trigger: 'blur' },
+                    { min: 1, max: 50, message: 'Длина от 5 до 50 символов', trigger: 'blur' },
                     { validator: validateNickname,  trigger: 'blur'}
                 ],
                 email: [
                     { required: true, message: 'адрес электронной почты example.com', trigger: 'blur' },
-                    { min: 5, max: 20, message: 'Длина от 5 до 20 символов', trigger: 'blur' },
+                    { min: 5, max: 50, message: 'Длина от 5 до 50 символов', trigger: 'blur' },
                     { validator: validateOthers,  trigger: 'blur'}
                 ],
                 phone: [
                     { required: true, message: 'номер телефона', trigger: 'blur' },
-                    { min: 5, max: 20, message: 'Длина от 5 до 20 символов', trigger: 'blur' },
+                    { min: 5, max: 15, message: 'Длина от 5 до 15 символов', trigger: 'blur' },
                     { validator: validatePhone,  trigger: 'blur'}
                 ],
                 code: [
                     { required: true, message: 'код', trigger: 'blur' },
-                    { min: 5, max: 20, message: 'Длина 6 символов', trigger: 'blur' },
-                    { validator: validatePhone,  trigger: 'blur'}
+                    { min: 0, max: 20, message: 'Длина 6 символов', trigger: 'blur' }
                 ],
             }
         }
     },
     methods: {
+        //节流
+        changefield: throttle(function(_type, index, item) {
+            this.emailAuthentication()
+        }, 1000),
         login() {
+            const loading = this.$loading({
+                lock: true,
+                text: 'Loading',
+                spinner: 'el-icon-loading',
+                background: 'rgba(0, 0, 0, 0.8)'
+            });
+            setTimeout(() => {
+                loading.close();
+            }, 10000);
             this.$refs['userForm'].validate((valid) => {
                 if (valid) {  // 表单校验合法
                     if (this.user.password !== this.user.confirmPassword) {
                         this.$message.error("Пароль, введенный дважды, не совпадает")
+                        loading.close();
                         return false
                     }
                     this.request.post("/user/register", this.user).then(res => {
                         if (res.code === '200') {
+                            loading.close();
                             this.$router.push("/login")
                             this.$message.success("Регистрация прошла успешно")
                         }else if (res.code === '601') {//注册用户名被占用
                             this.$message.error("Имя пользователя уже занято")
                         }else if(res.code === '602'){
                             this.$message.error("электронная почта занята")
-                        } else {
+                        }else if(res.code === '600'){
                             this.$message.error("Регистрация не удалась")
                         }
+                        else {
+                            this.$message.error("Регистрация не удалась")
+                        }
+                        loading.close();
                     })
+                }else {
+                    loading.close();
                 }
             });
         },
         isValidString(str) {
             try {
-                const pattern = /^[A-Za-z0-9*@.\/\-+]+$/;
-                return pattern.test(str);
+                //英文字母数字俄语字母/*-+.@_
+                return ValidStringPattern.test(str);
             } catch (e){
                 return null
             }
         },
         isValidStringPhone(str) {
             try {
-                const pattern = /^[0-9]+$/;
-                return pattern.test(str);
+                return ValidPhonePattern.test(str);
             } catch (e){
                 return null
             }
         },
         isValidStringNickname(str) {
             try {
-                const pattern = /^[\u4E00-\u9FA5A-Za-z0-9Ѐ-ӿ]+$/.test(str);
-                return pattern;
+                return ValidNicknamePattern.test(str);
             } catch (e){
                 return null
             }
         },
         emailAuthentication(){
-            console.log(this.user.email)
             request.get("/user/emailverification/" + this.user.email).then(res => {
                 if (res.code === '200') {
                     this.$message.success("Отправлено успешно")
@@ -296,8 +308,8 @@ export default {
                     this.$message.error("Не удалось отправить код")
                 }
             })
+        },
 
-        }
     }
 }
 </script>
@@ -306,6 +318,5 @@ export default {
 .wrapper {
     height: 100vh;
     background-image: linear-gradient(to bottom right, #FC466B , #3F5EFB);
-    overflow: hidden;
 }
 </style>

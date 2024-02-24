@@ -16,9 +16,10 @@ import java.util.List;
  * @since 2023-05-29
  */
 public interface OrderFileMapper extends BaseMapper<OrderFile> {
-    @Select("select * from sys_order_file where order_name = #{ordername}")
-    List<OrderFile> getByOrdername(String ordername);
+    @Select("select * from sys_order_file where orderD_id = #{orderDId}")
+    List<OrderFile> getByOrderDId(Integer orderDId);
 
-    @Delete("delete from sys_order_file where order_name = #{ordername}")
-    boolean removeByOrderName(String ordername);
+    @Delete("delete from sys_order_file where order_id = #{orderId}")
+    boolean removeByOrderId(Integer orderId);
+
 }

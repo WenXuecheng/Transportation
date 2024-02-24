@@ -4,6 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.rucn.transportation.common.Result;
@@ -31,6 +32,9 @@ public class FilesController {
         @Value("${files.upload.path}")
         private String fileUploadPath;
 
+        @Value("${files.upload.cache}")
+        private String fileUploadCache;
+
         @Value("${server.ip}")
         private String serverIp;
 
@@ -57,6 +61,7 @@ public class FilesController {
                 String fileUUID = uuid + StrUtil.DOT + type;
 
                 File uploadFile = new File(fileUploadPath + fileUUID);
+                File uploadCache = new File(fileUploadCache + fileUUID);
                 // 判断配置的文件目录是否存在，若不存在则创建一个新的文件目录
                 File parentFile = uploadFile.getParentFile();
                 if(!parentFile.exists()) {
@@ -76,8 +81,6 @@ public class FilesController {
                         // 数据库若不存在重复文件，则不删除刚才上传的文件
                         url = "http://"+ serverIp +":"+serverPort+"/file/" + fileUUID;
                 }
-
-
                 // 存储数据库
                 Files saveFile = new Files();
                 saveFile.setName(originalFilename);
@@ -87,6 +90,67 @@ public class FilesController {
                 saveFile.setMd5(md5);
                 filesMapper.insert(saveFile);
                 return url;
+        }
+
+        /**
+         * 文件上传接口
+         * @param file 前端传递过来的img
+         * @return
+         * @throws IOException
+         */
+        @PostMapping("/uploadImg")
+        public JSONObject uploadImg(@RequestParam MultipartFile file) throws IOException {
+                try {
+                        String originalFilename = file.getOriginalFilename();
+                        String type = FileUtil.extName(originalFilename);
+                        long size = file.getSize();
+
+                        // 定义一个文件唯一的标识码
+                        String uuid = IdUtil.fastSimpleUUID();
+                        String fileUUID = uuid + StrUtil.DOT + type;
+
+                        File uploadFile = new File(fileUploadPath + fileUUID);
+                        // 判断配置的文件目录是否存在，若不存在则创建一个新的文件目录
+                        File parentFile = uploadFile.getParentFile();
+                        if(!parentFile.exists()) {
+                                parentFile.mkdirs();
+                        }
+
+                        String url;
+                        // 获取文件的md5
+                        String md5 = SecureUtil.md5(file.getInputStream());
+                        // 从数据库查询是否存在相同的记录
+                        Files dbFiles = getFileByMd5(md5);
+                        if (dbFiles != null) { // 文件已存在
+                                url = dbFiles.getUrl();
+                        } else {
+                                // 上传文件到磁盘
+                                file.transferTo(uploadFile);
+                                // 数据库若不存在重复文件，则不删除刚才上传的文件
+                                url = "http://"+ serverIp +":"+serverPort+"/file/" + fileUUID;
+                        }
+
+                        // 存储数据库
+                        Files saveFile = new Files();
+                        saveFile.setName(originalFilename);
+                        saveFile.setType(type);
+                        saveFile.setSize(size/1024);
+                        saveFile.setUrl(url);
+                        saveFile.setMd5(md5);
+                        filesMapper.insert(saveFile);
+
+                        JSONObject json = new JSONObject();
+                        json.put("errno", 0);
+                        json.put("data", new JSONObject());
+                        JSONObject data = json.getJSONObject("data");
+                        data.put("url", url);
+                        return json;
+                } catch (Exception e) {
+                        JSONObject json = new JSONObject();
+                        json.put("errno", 1);
+                        json.put("message", "upload img failed");
+                        return json;
+                }
         }
 
         /**

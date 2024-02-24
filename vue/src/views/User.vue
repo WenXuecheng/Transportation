@@ -215,13 +215,13 @@ export default {
             this.$message.success("导入成功")
             this.load()
         },
-        //禁止页面滑动
-        stop(){
-            var box=function(e)
-            {passive: false ;};
-            document.body.style.overflow='hidden';
-            document.addEventListener("touchmove",box,false);
-        },
+        // //禁止页面滑动
+        // stop(){
+        //     var box=function(e)
+        //     {passive: false ;};
+        //     document.body.style.overflow='hidden';
+        //     document.addEventListener("touchmove",box,false);
+        // },
     }
 }
 </script>

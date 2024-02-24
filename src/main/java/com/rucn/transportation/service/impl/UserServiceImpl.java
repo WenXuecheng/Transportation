@@ -3,6 +3,7 @@ package com.rucn.transportation.service.impl;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rucn.transportation.common.Result;
 import com.rucn.transportation.common.RoleEnum;
 import cn.hutool.core.bean.BeanUtil;
@@ -35,6 +36,7 @@ import javax.annotation.Resource;
 import javax.swing.text.StyledEditorKit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -89,7 +91,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         List<Menu> roleMenus = getRoleMenus(role);
         userDTO.setIsEnable(one.getIsEnable());
         userDTO.setMenus(roleMenus);
+        //防止密码泄露
         userDTO.setPassword("");
+        userDTO.setOPassword("");
         return userDTO;
     }
 
@@ -97,30 +101,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public User register(UserDTO userDTO) {
         userDTO.setRole(null);
         userDTO.setAvatarUrl(null);
-        //检查数据的格式电话号码应为数字，昵称为中文、英文、俄文、数字，其他为数字、英文字母和@.*/-+
-        if (!userDTO.getNickname().matches("[\\u4E00-\\u9FA5A-Za-z0-9Ѐ-ӿ]+") || !Tools.isValidString(userDTO.getNickname(), 1, 10))
-        {
-            throw new ServiceException(Constants.CODE_600, "Please enter the correct nickname");
-        }
-        if (!userDTO.getPhone().matches("[0-9]+") || !Tools.isValidString(userDTO.getPhone(), 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_600, "Please enter the correct phone number");
-        }
-        if (!userDTO.getUsername().matches("[0-9A-Za-z@.*/\\-+]+") || !Tools.isValidString(userDTO.getUsername(), 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_600, "Please enter as required");
-        }
-        if (!userDTO.getPassword().matches("[0-9A-Za-z@.*/\\-+]+") || !Tools.isValidString(userDTO.getPassword(), 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_600, "Please enter as required");
-        }
-        if (!userDTO.getEmail().matches("[0-9A-Za-z@.*/\\-+]+") || !Tools.isValidString(userDTO.getEmail(), 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_600, "Please enter as required");
-        }
-
         // 用户密码 md5加密
+        userDTO.setOPassword(userDTO.getPassword());
         userDTO.setPassword(SecureUtil.md5(userDTO.getPassword()));
+        userDTO.setUsername(this.generateUserName());
         User one = getUserInfo(userDTO);
         try {
             QueryWrapper<User> queryWrapper_email = new QueryWrapper<>();
@@ -129,9 +113,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             if (oneEamil == null){
 
             }else {
+                stringRedisTemplate.delete("email_code_"+userDTO.getEmail());
                 throw new ServiceException(Constants.CODE_602, "");
             }
         } catch (Exception e){
+            stringRedisTemplate.delete("email_code_"+userDTO.getEmail());
             throw new ServiceException(Constants.CODE_602, "Mailboxes are already being used");
         }
         if (one == null) {
@@ -139,33 +125,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             BeanUtil.copyProperties(userDTO, one, true);
             // 默认一个普通用户的角色
             one.setRole(RoleEnum.ROLE_USER.toString());
-            one.setNickname(one.getUsername());
             one.setIsEnable(false);
             one.setId(null); // 把 copy完之后的用户对象存储到数据库
             // 检测验证码
             String code = stringRedisTemplate.opsForValue().get("email_code_"+userDTO.getEmail());
+            stringRedisTemplate.delete("email_code_"+userDTO.getEmail());
             if (StrUtil.isBlank(code)) {
-                // 存缓存
                 throw new ServiceException(Constants.CODE_600, "Email authentication failed");
             }
             if (code.equals(userDTO.getCode())) {
                 one.setIsEnable(true);
+                try {
+                    emailService.sendUserInfo(one);
+                } catch (Exception e){
+                    throw new ServiceException(Constants.CODE_600, "Failure to send email");
+                }
                 save(one);
                 return one;
             }
-            stringRedisTemplate.delete("email_code_"+userDTO.getEmail());
             throw new ServiceException(Constants.CODE_600, "Failure to verify email");
         } else {
+            stringRedisTemplate.delete("email_code_"+userDTO.getEmail());
             throw new ServiceException(Constants.CODE_601, "User already exists");
         }
     }
-    //验证邮箱
+    //验证邮箱 注册时
     @Override
     public boolean emialVerification(String email) {
-        if (!email.matches("[0-9A-Za-z@.*/\\-+]+") || !Tools.isValidString(email, 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_600, "请按要求输入");
-        }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("email", email);
         User one;
@@ -175,7 +161,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new ServiceException(Constants.CODE_600, "The email has been used many times");
         }
         if (one == null) {
-            stringRedisTemplate.delete("email_code_"+email);
             String code = stringRedisTemplate.opsForValue().get("email_code_"+email);
             if (StrUtil.isBlank(code)) {
                 // 生成验证码
@@ -184,7 +169,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 // 存缓存
                 stringRedisTemplate.opsForValue().set("email_code_"+email, JSONUtil.toJsonStr(code),5, TimeUnit.MINUTES);
             } else {
-                throw new ServiceException(Constants.CODE_600, "send email error");
             }
             try {
                 emailService.sendMailCode(email, code);
@@ -200,21 +184,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public Boolean saveByUser(UserDTO userDTO) {
-        //版判断输入的数据是否合格
-        if (!userDTO.getEmail().matches("[0-9A-Za-z@.*/\\-+]+") || !Tools.isValidString(userDTO.getEmail(), 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_500, "Please enter as required");
-        }
-
-        if (!userDTO.getNickname().matches("[\\u4E00-\\u9FA5A-Za-z0-9Ѐ-ӿ]+") || !Tools.isValidString(userDTO.getNickname(), 1, 20))
-        {
-            throw new ServiceException(Constants.CODE_500, "Please enter the correct nickname");
-        }
-        if (!userDTO.getPhone().matches("[0-9]+") || !Tools.isValidString(userDTO.getPhone(), 5, 20))
-        {
-            throw new ServiceException(Constants.CODE_500, "Please enter the correct phone number");
-        }
-
         //角色必须是指定的
         if (!StrUtil.isBlank(userDTO.getRole())){
             if (userDTO.getRole().equals(RoleEnum.ROLE_USER.toString()) || userDTO.getRole().equals(RoleEnum.ROLE_SU.toString()) || userDTO.getRole().equals(RoleEnum.ROLE_ADMIN.toString())){
@@ -248,10 +217,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new ServiceException(Constants.CODE_502, "保存失败");
         }
     }
+// 忘记密码
+    @Override
+    public Boolean sendPassword(String email) {
+        try {
+            QueryWrapper<User> queryWrapper_email = new QueryWrapper<>();
+            queryWrapper_email.eq("email", email);
+            User oneEamil = getOne(queryWrapper_email);// 从数据库查询用户邮箱是否已经存在
+            if (oneEamil == null){
+                throw new ServiceException(Constants.CODE_602, "用户不存在");
+            }
+            emailService.sendPasswordEmail(oneEamil);
+            return true;
+        } catch (Exception e){
+            throw new ServiceException(Constants.CODE_602, "邮箱被多次使用");
+        }
+    }
 
     @Override
     public void updatePassword(UserPasswordDTO userPasswordDTO) {
-        int update = userMapper.updatePassword(userPasswordDTO);
+        int update = userMapper.updatePassword(userPasswordDTO.getId(),userPasswordDTO.getUsername(),userPasswordDTO.getPassword(),userPasswordDTO.getNewPassword() ,userPasswordDTO.getOPassword());
         if (update < 1) {
             throw new ServiceException(Constants.CODE_600, "Password error");
         }
@@ -302,12 +287,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public boolean editUse(User user) {
 
         //版判断输入的数据是否合格
-        if (!user.getEmail().matches("[0-9A-Za-z@.*/\\-+]+") || !Tools.isValidString(user.getEmail(), 5, 20))
+        if (!user.getEmail().matches("[0-9A-Za-z@.*/\\-_+]+") || !Tools.isValidString(user.getEmail(), 5, 40))
         {
             throw new ServiceException(Constants.CODE_500, "Please enter as required");
         }
 
-        if (!user.getNickname().matches("[\\u4E00-\\u9FA5A-Za-z0-9Ѐ-ӿ]+") || !Tools.isValidString(user.getNickname(), 1, 10))
+        if (!user.getNickname().matches("[\\u4E00-\\u9FA5A-Za-z0-9Ѐ-ӿ]+") || !Tools.isValidString(user.getNickname(), 1, 20))
         {
             throw new ServiceException(Constants.CODE_500, "Please enter the correct nickname");
         }
@@ -368,6 +353,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }else {
             return one;
         }
+    }
+
+
+    // 用户名生成
+    private String generateUserName() {
+        StringBuilder sb = new StringBuilder();
+        char firstChar = (char) (new Random().nextInt(26) + 'A');
+        sb.append(firstChar);
+        for (int i = 0; i < 5; i++) {
+            int digit = new Random().nextInt(10);
+            sb.append(digit);
+        }
+
+        return sb.toString();
     }
 
 

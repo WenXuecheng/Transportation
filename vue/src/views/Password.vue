@@ -43,6 +43,7 @@ export default {
     },
     created() {
         this.form.username = this.user.username
+        this.form.id = this.user.id
     },
     methods: {
         save() {
